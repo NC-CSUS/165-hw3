@@ -148,7 +148,12 @@ public class MyGame extends VariableFrameRateGame
 	private boolean lightToggle = false;
 	private boolean isRunning = false;
 	private boolean choosingModel = true;
+	private boolean spiderAttack = false;
+	private long spiderAttackTime;
+	private long spiderCooldownTime = 4000;
 	private int health = 100;
+	private GhostNPC ghostNPC;
+	private Vector3f ghostNPCLoc;
 	
 	//Skybox
 	private int fluffyClouds;
@@ -158,7 +163,7 @@ public class MyGame extends VariableFrameRateGame
 	
 	//Audio
 	private IAudioManager audioManager;
-	private Sound whistleSound, runSound, punchSound, spiderSound, backgroundMusic; 
+	private Sound whistleSound, runSound, punchSound, spiderSound, backgroundMusic, zapSound; 
 	
 	//Physics
 	private PhysicsEngine physicsEngine;
@@ -446,7 +451,7 @@ public class MyGame extends VariableFrameRateGame
 	@Override
 	/**Initialize sounds */
 	public void loadSounds(){
-		AudioResource whistle_resource, run_resource, punch_resource, spider_resource, background_resource;
+		AudioResource whistle_resource, run_resource, punch_resource, spider_resource, background_resource, zap_resource;
 		audioManager = engine.getAudioManager();
 		
 		whistle_resource = audioManager.createAudioResource("assets/sounds/whistle.wav", AudioResourceType.AUDIO_SAMPLE); //I made
@@ -454,30 +459,37 @@ public class MyGame extends VariableFrameRateGame
 		punch_resource = audioManager.createAudioResource("assets/sounds/punch.wav", AudioResourceType.AUDIO_SAMPLE); https://opengameart.org/content/hit-sound-effects 
 		spider_resource = audioManager.createAudioResource("assets/sounds/spider5.wav", AudioResourceType.AUDIO_SAMPLE); //I made
 		background_resource = audioManager.createAudioResource("assets/sounds/Incorporeality.wav", AudioResourceType.AUDIO_SAMPLE); //Free
+		zap_resource = audioManager.createAudioResource("assets/sounds/zap.wav", AudioResourceType.AUDIO_SAMPLE); //I made
 
-		whistleSound = new Sound(whistle_resource, SoundType.SOUND_EFFECT, 100, true);
-		runSound = new Sound(run_resource, SoundType.SOUND_EFFECT, 100, true);
-		punchSound = new Sound(punch_resource, SoundType.SOUND_EFFECT, 100, true);
+
+		whistleSound = new Sound(whistle_resource, SoundType.SOUND_EFFECT, 100, false);
+		runSound = new Sound(run_resource, SoundType.SOUND_EFFECT, 30, true);
+		punchSound = new Sound(punch_resource, SoundType.SOUND_EFFECT, 100, false);
 		spiderSound = new Sound(spider_resource, SoundType.SOUND_EFFECT, 250, true);
 		backgroundMusic = new Sound(background_resource, SoundType.SOUND_MUSIC, 2, true);
+		zapSound = new Sound(zap_resource, SoundType.SOUND_EFFECT, 500, false);
 		whistleSound.initialize(audioManager);
 		runSound.initialize(audioManager);
 		punchSound.initialize(audioManager);
 		spiderSound.initialize(audioManager);
 		backgroundMusic.initialize(audioManager);
+		zapSound.initialize(audioManager);
 		
-		//whistleSound.setMaxDistance(15.0f);
-		//whistleSound.setMinDistance(0.1f);
-		//whistleSound.setRollOff(5.0f);
-		//runSound.setMaxDistance(5.0f);
-		//runSound.setMinDistance(0.1f);
-		//runSound.setRollOff(4.0f);
-		//punchSound.setMaxDistance(5.0f);
-		//punchSound.setMinDistance(0.1f);
-		//punchSound.setRollOff(4.0f);
+		whistleSound.setMaxDistance(15.0f);
+		whistleSound.setMinDistance(0.1f);
+		whistleSound.setRollOff(5.0f);
+		runSound.setMaxDistance(5.0f);
+		runSound.setMinDistance(0.1f);
+		runSound.setRollOff(4.0f);
+		punchSound.setMaxDistance(5.0f);
+		punchSound.setMinDistance(0.1f);
+		punchSound.setRollOff(4.0f);
 		
+		zapSound.setMaxDistance(10.0f);
+		zapSound.setMinDistance(2f);
+		zapSound.setRollOff(0.01f);
 		spiderSound.setMaxDistance(10.0f);
-		spiderSound.setMinDistance(2f);
+		spiderSound.setMinDistance(1f);
 		spiderSound.setRollOff(1.0f);
 	}
 	
@@ -702,6 +714,18 @@ public class MyGame extends VariableFrameRateGame
 		
 		//Collision logic
 		checkCollisionObjects();
+		if(ghostNPC != null){
+			float spiderDist = calculateDistance(ghostNPC, objPlayer);
+			if(spiderDist <= 10 && spiderAttack == false){
+				spiderAttack = true;
+				health -= 10;
+				spiderAttackTime = System.currentTimeMillis();
+				zapSound.play();
+			}
+			if(System.currentTimeMillis() >= spiderAttackTime + spiderCooldownTime){
+				spiderAttack = false;
+			}
+		}
 		
 		//Update any animations
 		animPlayerS.updateAnimation();
@@ -1020,7 +1044,7 @@ public class MyGame extends VariableFrameRateGame
 		
 				fwd = objPlayer.getWorldForwardVector(); //Sets fwd to the world forward vector
 				loc = objPlayer.getWorldLocation(); //Sets loc to current dolphin location
-				newLocation = loc.add(fwd.mul((float)(timePassed * 36f))); //Sets new location to along the forward vector * .02 ahead //Was 12f
+				newLocation = loc.add(fwd.mul((float)(timePassed * 136f))); //Sets new location to along the forward vector * .02 ahead //Was 12f
 				testLoc = (new Vector3f(newLocation.x(), 0, newLocation.z()));
 				//System.out.println(newLocation.y());
 				//objPlayer.getPhysicsObject().setTransform(toDoubleArray(newLocation));
@@ -1033,10 +1057,12 @@ public class MyGame extends VariableFrameRateGame
 					animPlayerS.playAnimation("RUN", 0.45f, AnimatedShape.EndType.LOOP, 0);
 					protClient.sendAnimationMessage("run");
 					isRunning = true;
+					runSound.play();
 				}
 				
 				double[] transform = toDoubleArray(objPlayer.getWorldTranslation().mul(objPlayer.getWorldRotation()).get(vals));
 					objPlayer.getPhysicsObject().setTransform(transform);
+				
 				
 				break;
 
@@ -1118,6 +1144,7 @@ public class MyGame extends VariableFrameRateGame
 				animPlayerS.stopAnimation();
 				animPlayerS.playAnimation("PUNCH", 0.3f, AnimatedShape.EndType.STOP, 0);
 				protClient.sendAnimationMessage("punch");
+				punchSound.play();
 				break;
 				
 			case KeyEvent.VK_6:
@@ -1331,6 +1358,7 @@ public class MyGame extends VariableFrameRateGame
 				animPlayerS.stopAnimation();
 				protClient.sendAnimationMessage("stop");
 				isRunning = false;
+				runSound.stop();
 				break;
 		}
 	}
@@ -1527,10 +1555,9 @@ public class MyGame extends VariableFrameRateGame
 		return distance;
 	}
 	
-	private void modelResetFunc(){
-		
-		
-		
+	public void setNPCLoc(Vector3f pos, GhostNPC g){
+		ghostNPC = g;
+		ghostNPCLoc = pos;
 	}
 		
 

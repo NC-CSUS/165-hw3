@@ -49,10 +49,14 @@ public class CameraOrbit3D{
 		OrbitAzimuthAction orbitAz = new OrbitAzimuthAction();
 		OrbitRadiusAction orbitRa = new OrbitRadiusAction();
 		OrbitElevationAction orbitEl = new OrbitElevationAction();
+		OrbitElevationActionUp orbitElUp = new OrbitElevationActionUp();
+		OrbitElevationActionDown orbitElDown = new OrbitElevationActionDown();
 		InputManager im = engine.getInputManager();
-		im.associateActionWithAllGamepads(net.java.games.input.Component.Identifier.Axis.Y, orbitEl, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+		//im.associateActionWithAllGamepads(net.java.games.input.Component.Identifier.Axis.Y, orbitEl, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 		im.associateActionWithAllGamepads(net.java.games.input.Component.Identifier.Axis.RZ, orbitRa, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateActionWithAllGamepads(net.java.games.input.Component.Identifier.Axis.Z, orbitAz, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+		im.associateActionWithAllGamepads(net.java.games.input.Component.Identifier.Axis.RX, orbitElUp, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+		im.associateActionWithAllGamepads(net.java.games.input.Component.Identifier.Axis.RY, orbitElDown, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 	
 		//Adding forward motion to the player avatar here and chaning it so left stick "Y" is forward
 		//Ps4 Controller
@@ -142,6 +146,57 @@ public class CameraOrbit3D{
 			cameraElevation += rotAmount;
 			cameraElevation = cameraElevation % 360;
 			updateCameraPosition();
+		}
+	}
+	
+	/**Elevation for orbital camera */
+	private class OrbitElevationActionUp extends AbstractInputAction{
+       
+		public void performAction(float time, Event event){
+			//System.out.println("El Up: " + event.getValue());
+			System.out.println("camera Elevation u: "+cameraElevation);
+			float rotAmount;
+			if(event.getValue() < -0.8f){
+				rotAmount = 0f;
+			}else{
+				if(event.getValue() > -0.8f){
+					rotAmount = 1f;
+				}else{
+					rotAmount = 0.0f;
+				}
+			}
+			if(cameraElevation >= -10f && cameraElevation <= 88f){
+				cameraElevation += rotAmount;
+				cameraElevation = cameraElevation % 360;
+				updateCameraPosition();
+			}
+			
+			
+		}
+	}
+	
+	/**Elevation for orbital camera */
+	private class OrbitElevationActionDown extends AbstractInputAction{
+		
+       
+		public void performAction(float time, Event event){
+			//System.out.println("El Down: " + event.getValue());
+			System.out.println("camera Elevation d: "+cameraElevation);
+			float rotAmount;
+			if(event.getValue() < -0.8f){
+				rotAmount = 0f;
+			}else{
+				if(event.getValue() > -0.8f){
+					rotAmount = -1f;
+				}else{
+					rotAmount = 0.0f;
+				}
+			}
+			if(cameraElevation >= 1 && cameraElevation <= 90f){
+				cameraElevation += rotAmount;
+				cameraElevation = cameraElevation % 360;
+				updateCameraPosition();
+			}
 		}
 	}
 
