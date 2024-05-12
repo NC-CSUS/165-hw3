@@ -455,9 +455,9 @@ public class MyGame extends VariableFrameRateGame
 		spider_resource = audioManager.createAudioResource("assets/sounds/spider5.wav", AudioResourceType.AUDIO_SAMPLE); //I made
 		background_resource = audioManager.createAudioResource("assets/sounds/Incorporeality.wav", AudioResourceType.AUDIO_SAMPLE); //Free
 
-		whistleSound = new Sound(whistle_resource, SoundType.SOUND_EFFECT, 100, true);
-		runSound = new Sound(run_resource, SoundType.SOUND_EFFECT, 100, true);
-		punchSound = new Sound(punch_resource, SoundType.SOUND_EFFECT, 100, true);
+		whistleSound = new Sound(whistle_resource, SoundType.SOUND_EFFECT, 100, false);
+		runSound = new Sound(run_resource, SoundType.SOUND_EFFECT, 30, true);
+		punchSound = new Sound(punch_resource, SoundType.SOUND_EFFECT, 100, false);
 		spiderSound = new Sound(spider_resource, SoundType.SOUND_EFFECT, 250, true);
 		backgroundMusic = new Sound(background_resource, SoundType.SOUND_MUSIC, 2, true);
 		whistleSound.initialize(audioManager);
@@ -466,15 +466,15 @@ public class MyGame extends VariableFrameRateGame
 		spiderSound.initialize(audioManager);
 		backgroundMusic.initialize(audioManager);
 		
-		//whistleSound.setMaxDistance(15.0f);
-		//whistleSound.setMinDistance(0.1f);
-		//whistleSound.setRollOff(5.0f);
-		//runSound.setMaxDistance(5.0f);
-		//runSound.setMinDistance(0.1f);
-		//runSound.setRollOff(4.0f);
-		//punchSound.setMaxDistance(5.0f);
-		//punchSound.setMinDistance(0.1f);
-		//punchSound.setRollOff(4.0f);
+		whistleSound.setMaxDistance(15.0f);
+		whistleSound.setMinDistance(0.1f);
+		whistleSound.setRollOff(5.0f);
+		runSound.setMaxDistance(5.0f);
+		runSound.setMinDistance(0.1f);
+		runSound.setRollOff(4.0f);
+		punchSound.setMaxDistance(5.0f);
+		punchSound.setMinDistance(0.1f);
+		punchSound.setRollOff(4.0f);
 		
 		spiderSound.setMaxDistance(10.0f);
 		spiderSound.setMinDistance(2f);
@@ -1020,7 +1020,7 @@ public class MyGame extends VariableFrameRateGame
 		
 				fwd = objPlayer.getWorldForwardVector(); //Sets fwd to the world forward vector
 				loc = objPlayer.getWorldLocation(); //Sets loc to current dolphin location
-				newLocation = loc.add(fwd.mul((float)(timePassed * 36f))); //Sets new location to along the forward vector * .02 ahead //Was 12f
+				newLocation = loc.add(fwd.mul((float)(timePassed * 136f))); //Sets new location to along the forward vector * .02 ahead //Was 12f
 				testLoc = (new Vector3f(newLocation.x(), 0, newLocation.z()));
 				//System.out.println(newLocation.y());
 				//objPlayer.getPhysicsObject().setTransform(toDoubleArray(newLocation));
@@ -1033,10 +1033,12 @@ public class MyGame extends VariableFrameRateGame
 					animPlayerS.playAnimation("RUN", 0.45f, AnimatedShape.EndType.LOOP, 0);
 					protClient.sendAnimationMessage("run");
 					isRunning = true;
+					runSound.play();
 				}
 				
 				double[] transform = toDoubleArray(objPlayer.getWorldTranslation().mul(objPlayer.getWorldRotation()).get(vals));
 					objPlayer.getPhysicsObject().setTransform(transform);
+				
 				
 				break;
 
@@ -1118,6 +1120,7 @@ public class MyGame extends VariableFrameRateGame
 				animPlayerS.stopAnimation();
 				animPlayerS.playAnimation("PUNCH", 0.3f, AnimatedShape.EndType.STOP, 0);
 				protClient.sendAnimationMessage("punch");
+				punchSound.play();
 				break;
 				
 			case KeyEvent.VK_6:
@@ -1331,6 +1334,7 @@ public class MyGame extends VariableFrameRateGame
 				animPlayerS.stopAnimation();
 				protClient.sendAnimationMessage("stop");
 				isRunning = false;
+				runSound.stop();
 				break;
 		}
 	}
