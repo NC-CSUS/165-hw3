@@ -388,6 +388,7 @@ public class ProtocolClient extends GameConnectionClient
 			}
 		}
 		ghostNPC.setPosition(position);
+		game.setNPCLoc(position, ghostNPC);
 		if(gsize == 1.0){
 			gs = false;
 		}else{
